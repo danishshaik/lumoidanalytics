@@ -1,0 +1,97 @@
+// Place all the styles related to the graph controller here.
+// They will automatically be included in application.css.
+// You can use Sass (SCSS) here: http://sass-lang.com/
+@import url(http://fonts.googleapis.com/css?family=Lato:100,400,700);
+
+$body-bg:                          white;
+$font-family-sans-serif:           'Lato', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+$navbar-height:                    80px;
+$navbar-default-bg:                #fd6f4a;
+$navbar-default-brand-bg:          white;
+$navbar-default-brand-color:       white;
+$brand-primary:                    white;
+$jumbotron-bg:                     white;
+
+
+@import 'bootstrap';
+
+.center {
+     text-align: center;
+}
+
+.navbar-brand {
+	height: 90px;
+	background-color: #FD4A1B;
+	font-weight: 100;
+	font-size: 25px;
+	padding-left: 5vw;
+	padding-right: 5vw;
+}
+
+.navbar-header {
+	height: 100%;
+}
+
+#chart svg {
+  height: 85vh;
+}
+
+.thumbnail {
+	background-color: #FD6F4A;
+	height: 30vh;
+}
+
+.navbar {
+	border: none !important;
+	border-radius: 0px;
+}
+
+img{
+	height: 25px;
+}
+
+img:hover {
+    opacity: 0.5;
+}
+
+.navbar-right {
+	padding-left: 3vw;
+	border-left: 1px solid white;
+}
+
+.nav-item {
+	padding-left: 1vw;
+	padding-right: 1vw;
+}
+
+
+
+.pie-body {
+	background-color: #F8F8F8;
+}
+.top-body {
+	background-color: #F0F0F0;
+}
+
+body {
+	background-color: #F0F0F0;
+}
+
+.piechartrow {
+	padding-top: 7vh;
+	padding-bottom: 7vh;
+}
+
+.bar-row{
+	padding-top: 7vh;
+	padding-bottom: 7vh;
+}
+
+.chart-label{
+	font-family: 'Lato', sans-serif;
+	font-weight: 700;
+	color: #818793;
+	font-size: 30px;
+	letter-spacing: 3px;
+	margin-top: 30%;
+}
