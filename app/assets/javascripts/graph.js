@@ -256,187 +256,178 @@
 //        error();
 //    }
 // });
-function stream_layers(n, m, o) {
-  if (arguments.length < 3) o = 0;
-  function bump(a) {
-    var x = 1 / (.1 + Math.random()),
-        y = 2 * Math.random() - .5,
-        z = 10 / (.1 + Math.random());
-    for (var i = 0; i < m; i++) {
-      var w = (i / m - y) * z;
-      a[i] += x * Math.exp(-w * w);
-    }
-  }
-  return d3.range(n).map(function() {
-      var a = [], i;
-      for (i = 0; i < m; i++) a[i] = o + o * Math.random();
-      for (i = 0; i < 5; i++) bump(a);
-      return a.map(stream_index);
-    });
+
+//Sort the values by y, so that nvd3 graphs as a function
+function sortNumbers (a,b) {
+	return a.x - b.x;
 }
 
-/* Another layer generator using gamma distributions. */
-function stream_waves(n, m) {
-  return d3.range(n).map(function(i) {
-    return d3.range(m).map(function(j) {
-        var x = 20 * j / m - i / 3;
-        return 2 * x * Math.exp(-.5 * x);
-      }).map(stream_index);
-    });
-}
+//Abstraction of format algo
+function format () {
+	var json = [
+		{
+			"key": "Orders",
+			"values": []
+		}
+	];
 
-function stream_index(d, i) {
-  return {x: i, y: Math.max(0, d)};
-}
-
-// var data = [
-// 	{
-// 		"key" : "Revenue",
-// 		"values" : [
-// 		{
-// 			"x": 1,
-// 			"y": 2
-// 		},
-// 		{
-// 			"x": 2,
-// 			"y": 4
-// 		},
-// 		{
-// 			"x": 3,
-// 			"y": 6
-// 		}
-// 		]
-// 	},
-// 	{
-// 		"key" : "Revenue",
-// 		"values" : [
-// 		{
-// 			"x": 1,
-// 			"y": 2
-// 		},
-// 		{
-// 			"x": 2,
-// 			"y": 9
-// 		},
-// 		{
-// 			"x": 3,
-// 			"y": 6
-// 		}
-// 		]
-// 	},
-// 	{
-// 		"key" : "Revenue",
-// 		"values" : [
-// 		{
-// 			"x": 1,
-// 			"y": 2
-// 		},
-// 		{
-// 			"x": 2,
-// 			"y": 4
-// 		},
-// 		{
-// 			"x": 3,
-// 			"y": 3
-// 		}
-// 		]
-// 	},
-
-// ];
-$( document ).ready(function() {
-	// nv.addGraph(function() {
-	//   var chart = nv.models.lineWithFocusChart();
-
-	//   chart.xAxis
-	//       .tickFormat(d3.format(',f'));
-
-	//   chart.yAxis
-	//       .tickFormat(d3.format(',.2f'));
-
-	//   chart.y2Axis
-	//       .tickFormat(d3.format(',.2f'));
-
-	//   d3.select('#chart svg')
-	//       .datum(data)
-	//       .transition().duration(500)
-	//       .call(chart);
-
-	//   nv.utils.windowResize(chart.update);
-
-	//   return chart;
-	// });
-
-	function testData() {
-	  return stream_layers(3,128,.1).map(function(data, i) {
-	    return { 
-	      key: 'Stream' + i,
-	      values: data
-	    };
-	  });
-	}
-});
-$( document ).ready(function() {
-
-$.ajax({
-	type: "GET",
-	contentType: "application/json; charset=utf-8",
-	url: 'data',
-	dataType: 'json',
-	success: function (data) {
-		var json = [
-			{
-				"key": "Revenue",
-				"values": []
-			}
-		];
-
-		for(var i = 0; i < data.length; i++) {
-			var date = new Date(data[i].created_at)
-			date.setDate(1);
-			date.setSeconds(0);
-			date.setMinutes(0);
-			date.setHours(0);
-			date = date.getTime();
-			var add = false;
-			for(var k = 0; k < json[0].values.length; k++ ) {
-				if (json[0].values[k].x === date) {
-					json[0].values[k].y++
-					add = true;
-				}
-			}
-			if(!add) {
-				json[0].values.push({"x": date, "y": 0});
+	for(var i = 0; i < data.length; i++) {
+		var date = new Date(data[i].created_at)
+		date.setDate(1);
+		date.setSeconds(0);
+		date.setMinutes(0);
+		date.setHours(0);
+		date = date.getTime();
+		var add = false;
+		for(var k = 0; k < json[0].values.length; k++ ) {
+			if (json[0].values[k].x === date) {
+				json[0].values[k].y++
+				add = true;
 			}
 		}
-
-		nv.addGraph(function() {
-		  var chart = nv.models.lineWithFocusChart();
-
-		  chart.xAxis
-        .tickFormat(function(d) {
-            return d3.time.format('%x')(new Date(d))
-          });
-
-
-		  chart.yAxis
-		      .tickFormat(d3.format(',.2f'));
-
-		  chart.y2Axis
-		      .tickFormat(d3.format(',.2f'));
-
-		  d3.select('#chart svg')
-		      .datum(json)
-		      .transition().duration(500)
-		      .call(chart);
-
-		  nv.utils.windowResize(chart.update);
-
-		  return chart;
-		});
-	},
-	error: function (result) {
-		error();
+		if(!add) {
+			json[0].values.push({"x": date, "y": 0});
+		}
 	}
-});
+	var max = 0;
+	for (var i = 0; i < json[0].values.length; i++) {
+		if(max < json[0].values[i].y) {
+			max = json[0].values[i].y;
+		}
+	}
+}
+
+function graph (data){
+	nv.addGraph(function() {
+		var chart = nv.models.lineWithFocusChart();
+		chart.interpolate("monotone");
+
+		chart.forceY([0, 400]);
+		chart.xAxis
+			.tickFormat(function(d) {
+				return d3.time.format('%x')(new Date(d))
+			});
+
+		chart.yAxis
+			.tickFormat(d3.format(',.2f'));
+
+		chart.y2Axis
+			.tickFormat(d3.format(',.2f'));
+
+		d3.select('#chart svg')
+			.datum(data)
+			.transition().duration(500)
+			.call(chart);
+
+		nv.utils.windowResize(chart.update);
+		return chart;
+	});
+}
+
+$( document ).ready(function() {
+	$.ajax({
+		type: "GET",
+		contentType: "application/json; charset=utf-8",
+		url: 'data',
+		dataType: 'json',
+		success: function (data) {
+			var json = [
+				{
+					"key": "Orders",
+					"values": []
+				},
+				{
+					"key": "Users",
+					"values": []
+				},
+				{
+					"key": "Revenue",
+					"values": []
+				}
+			];
+
+			for(var i = 0; i < data.length; i++) {
+				var date = new Date(data[i].created_at)
+				date.setDate(1);
+				date.setSeconds(0);
+				date.setMinutes(0);
+				date.setHours(0);
+				date = date.getTime();
+				var add = false;
+				for(var k = 0; k < json[0].values.length; k++ ) {
+					if (json[0].values[k].x === date) {
+						json[0].values[k].y++
+						add = true;
+					}
+				}
+				if(!add) {
+					json[0].values.push({"x": date, "y": 0});
+				}
+			}
+			var max = 0;
+			for (var i = 0; i < json[0].values.length; i++) {
+				if(max < json[0].values[i].y) {
+					max = json[0].values[i].y;
+				}
+			}
+
+			json[0].values.sort(sortNumbers);
+
+			$.ajax({
+				type:"GET",
+				contentType: "application/json; charset=utf-8",
+				url: "userdata",
+				dataType: "json",
+				success: function (userdata) {
+					for(var i = 0; i < userdata.length; i++) {
+						var date = new Date(userdata[i].created_at)
+						date.setDate(1);
+						date.setSeconds(0);
+						date.setMinutes(0);
+						date.setHours(0);
+						date = date.getTime();
+						var add = false;
+						for(var k = 0; k < json[1].values.length; k++ ) {
+							if (json[1].values[k].x === date) {
+								json[1].values[k].y++
+								add = true;
+							}
+						}
+						if(!add) {
+							json[1].values.push({"x": date, "y": 0});
+						}
+						json[1].values.sort(sortNumbers);
+
+					}
+					$.ajax({
+						type:"GET",
+						contentType: "application/json; charset=utf-8",
+						url: "popular",
+						dataType: "json",
+						success: function (revenuedata) {
+							console.log(revenuedata.length)
+							for(var i = 0; i < revenuedata.length; i++) {
+								var date = new Date(2015, i, 1);
+								console.log(revenuedata);
+								date = date.getTime();
+								json[2].values.push({"x": date, "y": revenuedata[i][0][0]});
+							}
+							graph(json);
+						},
+						error: function (result) {
+							error();
+						}
+					});
+					// graph(max, json);
+				},
+				error: function (result) {
+					error();
+				}
+			});
+		},
+		error: function (result) {
+			error();
+		}
+	});
 });
 

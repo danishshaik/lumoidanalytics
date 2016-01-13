@@ -5,7 +5,7 @@ Rails.application.routes.draw do
   get 'graph/index'
   get 'graph/data', :defaults => { :format => 'json' }
   get 'graph/userdata', :defaults => { :format => 'json' }
-  get 'graph/popularitems', :defaults => { :format => 'json' }
+  get 'graph/popular', :defaults => { :format => 'json' }
   get 'graph/piedata', :defaults => { :format => 'json' }
   get 'graph/bardata', :defaults => { :format => 'json' }
 

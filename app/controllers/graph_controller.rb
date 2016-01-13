@@ -47,7 +47,26 @@ class GraphController < ApplicationController
 	# 	        }
 	# 	    ]
 	# 	}.to_json
-
+	results = ActiveRecord::Base.connection.execute("SELECT COALESCE(o1.charges_amount - o2.refund_charges, 0) as revenue
+            FROM 
+            (
+              SELECT COALESCE(sum(charges.amount), 0) as charges_amount
+              FROM orders
+              INNER JOIN charges
+              ON orders.id = charges.order_id AND (charges.charge_type = 'charge' OR charges.charge_type = 'hold')
+              WHERE orders.status NOT IN ('in_progress')
+              AND (charges.created_at BETWEEN '2015-01-01 04:49:43' AND '2016-01-01 04:49:43')
+            ) as o1
+            INNER JOIN
+            (
+              SELECT COALESCE(sum(charges.amount), 0) as refund_charges
+              FROM orders
+              INNER JOIN charges
+              ON orders.id = charges.order_id AND charges.charge_type = 'refund'
+              WHERE orders.status NOT IN ('in_progress')
+              AND (charges.created_at BETWEEN '2015-01-01 04:49:43' AND '2016-01-01 04:49:43')
+            ) as o2
+	")
   	orders = Order.order(:start_date)
   	users = User.order(:created_at)
 
@@ -110,12 +129,67 @@ class GraphController < ApplicationController
     end
   end
   def popular
-  	popular = Popular.first(5)
+  	revArr = []
+  	for i in 1..12
+	   	start_date = '2015-' + i.to_s + '-01'
+	   	if i === 2
+	   		end_date = '2015-' + i.to_s + '-30'
+	   	elsif i%2 === 0
+	   		end_date = '2015-' + i.to_s + '-30'
+	  	else
+	  		end_date = '2015-' + i.to_s + '-31'
+	  	end
+	  	sql = "SELECT COALESCE(o1.charges_amount - o2.refund_charges, 0) as revenue
+	            FROM 
+	            (
+	              SELECT COALESCE(sum(charges.amount), 0) as charges_amount
+	              FROM orders
+	              INNER JOIN charges
+	              ON orders.id = charges.order_id AND (charges.charge_type = 'charge' OR charges.charge_type = 'hold')
+	              WHERE orders.status NOT IN ('in_progress')
+	              AND (charges.created_at BETWEEN '" + start_date + "' AND '" + end_date + "')
+	            ) as o1
+	            INNER JOIN
+	            (
+	              SELECT COALESCE(sum(charges.amount), 0) as refund_charges
+	              FROM orders
+	              INNER JOIN charges
+	              ON orders.id = charges.order_id AND charges.charge_type = 'refund'
+	              WHERE orders.status NOT IN ('in_progress')
+	              AND (charges.created_at BETWEEN '" + start_date + "' AND '" + end_date + "')
+	            ) as o2"
+	  	results = ActiveRecord::Base.connection.execute(sql)
+	  	revArr.push(results)
+	end
+  	# start_date = '2015-01-01'
+  	# end_date = '2016-01-01'
+  	# sql = "SELECT COALESCE(o1.charges_amount - o2.refund_charges, 0) as revenue
+   #          FROM 
+   #          (
+   #            SELECT COALESCE(sum(charges.amount), 0) as charges_amount
+   #            FROM orders
+   #            INNER JOIN charges
+   #            ON orders.id = charges.order_id AND (charges.charge_type = 'charge' OR charges.charge_type = 'hold')
+   #            WHERE orders.status NOT IN ('in_progress')
+   #            AND (charges.created_at BETWEEN '" + start_date + "' AND '" + end_date + "')
+   #          ) as o1
+   #          INNER JOIN
+   #          (
+   #            SELECT COALESCE(sum(charges.amount), 0) as refund_charges
+   #            FROM orders
+   #            INNER JOIN charges
+   #            ON orders.id = charges.order_id AND charges.charge_type = 'refund'
+   #            WHERE orders.status NOT IN ('in_progress')
+   #            AND (charges.created_at BETWEEN '" + start_date + "' AND '" + end_date + "')
+   #          ) as o2"
+  	# results = ActiveRecord::Base.connection.execute(sql)
 
+  	# puts results.class
   	respond_to do |format|
       format.json {
-        render :json => users
+        render :json => revArr
       }
+   
     end
   end
 
